@@ -6,12 +6,28 @@ link_library	= -lgtest -lgtest_main -lpthread
 CXXFLAGS 	= -std=c++17 -I$(include_path) -I/usr/local/include -L/usr/local/lib -g
 
 .PHONY : all
-all	: Transcript
+all	: Transcript SAMHeader SAM
 
 .PHONY : Transcript
 Transcript : $(unit_test_path)/Transcript_test.cpp
 	g++ $(CXXFLAGS) -o $@_test $< $(link_library)
 
+.PHONY : SAMHeader
+SAMHeader : $(unit_test_path)/SAMHeader_test.cpp
+	g++ $(CXXFLAGS) -o $@_test $< $(link_library)
+
+.PHONY : SAM
+SAM : $(unit_test_path)/SAM_test.cpp
+	g++ $(CXXFLAGS) -o $@_test $< $(link_library)
+
+# .PHONY : SequenceSpecificBiasModel
+# SequenceSpecificBiasModel : $(unit_test_path)/SequenceSpecificBiasModel_test.cpp
+# 	g++ $(CXXFLAGS) -o $@_test $< $(link_library)
+
+# .PHONY : GCBiasModel
+# GCBiasModel : $(unit_test_path)/GCBiasModel_test.cpp
+# 	g++ $(CXXFLAGS) -o $@_test $< $(link_library)
+
 .PHONY : clean
-clean : 
-	rm -f $(build_path)/Transcript_test
+clean :
+	rm -f $(build_path)/*_test
