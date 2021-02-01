@@ -8,34 +8,60 @@
 #include <locale>
 #include <stdexcept>
 #include <sstream>
+#include <atomic>
 
 class Transcript
 {
   public:
-    Transcript() = default;
-    Transcript(const Transcript&) = default;
-    Transcript& operator=(const Transcript&) = default;
-    Transcript(Transcript&& txp) = default;
-    Transcript& operator=(Transcript&& txp) = default;
+    Transcript(std::string str) : name_(str) {}
+
+    Transcript() = delete;
+    Transcript(Transcript&& txp)
+    {
+        name_ = std::move(txp.name_);
+        seq_ = std::move(txp.seq_);
+        length_ = std::move(txp.length_);
+        uniqueCount_.store(txp.uniqueCount_);
+        totalCount_.store(txp.totalCount_);
+    }
+    Transcript& operator=(Transcript&& txp)
+    {
+        name_ = std::move(txp.name_);
+        seq_ = std::move(txp.seq_);
+        length_ = std::move(txp.length_);
+        uniqueCount_.store(txp.uniqueCount_);
+        totalCount_.store(txp.totalCount_);
+    }
+    Transcript(const Transcript& txp) = delete;
+    Transcript& operator=(const Transcript& txp) = delete;
 
     Transcript(std::ifstream& ifs)
     {
         if(ifs.eof())
             return;
+        parseFastaHeader(ifs);
+        parseFastaSeq(ifs);
+    }
+
+    void parseFastaHeader(std::ifstream& ifs)
+    {
         std::string str;
         std::getline(ifs, str);
-        if(!isValidName(str))
-            throw std::runtime_error("Transcript name should start with '>'");
-        else
+        if(isValidName(str))
         {
-            std::istringstream iss(str);
+            std::istringstream iss(std::move(str));
             iss >> name_;
             name_.erase(name_.begin()); 
         }
+        else
+            throw std::runtime_error("Transcript name should start with '>'");
+    }
 
+    void parseFastaSeq(std::ifstream& ifs)
+    {
+        std::string str;
         while(ifs.peek()!='>' && !ifs.eof())
         {
-            str.clear();
             std::getline(ifs, str);
             makeUpperCase(str);
             if(isValidSeq(str))
@@ -76,10 +102,13 @@ class Transcript
         for(size_t i(0); i<str.size(); ++i)
             std::toupper(str[i], loc);
     }
-    
+
+    bool operator<(const Transcript& rhs) const { return name_ < rhs.name_; }
+    bool operator==(const Transcript& rhs) const { return name_ == rhs.name_; }       
+
     const std::string& getName() const { return name_; }
     const std::string& getSeq() const { return seq_; }
-    const uint32_t getLength() const { return length_; }
+    const uint32_t& getLength() const { return length_; }
     
 friend std::ostream& operator<<(std::ostream& os, const Transcript& txp)
 {
@@ -90,4 +119,6 @@ friend std::ostream& operator<<(std::ostream& os, const Transcript& txp)
     std::string name_;
     std::string seq_;
     uint32_t length_;
+    std::atomic<size_t> uniqueCount_;
+    std::atomic<size_t> totalCount_;
 };
