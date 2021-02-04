@@ -10,7 +10,7 @@ all	: Transcript SAMHeader SAM ReadPair SAMToReadPairs
 
 .PHONY : debug
 debug : CXXFLAGS += -DDEBUG -g
-debug : all
+debug : SAMToReadPairs
 
 .PHONY : Transcript
 Transcript : $(unit_test_path)/Transcript_test.cpp
@@ -30,6 +30,10 @@ ReadPair : $(unit_test_path)/ReadPair_test.cpp
 
 .PHONY : SAMToReadPairs
 SAMToReadPairs : $(unit_test_path)/SAMToReadPairs_test.cpp
+	$(CXX) $(CXXFLAGS) -o $@_test $< $(link_library)
+
+.PHONY : FragmentLengthDistribution
+FragmentLengthDistribution : $(unit_test_path)/FragmentLengthDistribution_test.cpp
 	$(CXX) $(CXXFLAGS) -o $@_test $< $(link_library)
 
 .PHONY : clean

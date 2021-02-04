@@ -30,7 +30,12 @@ TEST(SAMToReadPairs, constructor)
       , std::make_pair("2L:7529-9484W:FBtr0330654:2:1844:125:316:S"
                      , "CCGAGGACCTGATTTACAAGAAGTCCATGGGCGAGCGGGATCAGCCACAGAGCTCAGAGCGGATCTCAATATTTA"
         )
+      , "FBtr0330654"
+      , std::make_pair<uint32_t, uint32_t>(126, 192)
     );
+    ans0.addPosTlen("FBtr0300690", std::make_pair<uint32_t, uint32_t>(126, 192));
+    ans0.addPosTlen("FBtr0300689", std::make_pair<uint32_t, uint32_t>(126, 192));
+
     ReadPair ans1(
         vec
       , std::set<Transcript*, ReadPair::TranscriptPtrComp>{&vec[0], &vec[2]}
@@ -40,7 +45,11 @@ TEST(SAMToReadPairs, constructor)
       , std::make_pair("2L:7529-9484W:FBtr0330654:3:1844:943:1127:S"
                      , "TCGACGGTATGGCAACGAATATATTGATGTCTTTCGTACCCATTGAAAACGTTGTGGTGCTTGCGCTTTAAAATC"
         )
+      , "FBtr0300689"
+      , std::make_pair<uint32_t, uint32_t>(980, 185)
     );
+    ans1.addPosTlen("FBtr0330654", std::make_pair<uint32_t, uint32_t>(944, 185));
+
     ReadPair ans2(
         vec
       , std::set<Transcript*, ReadPair::TranscriptPtrComp>{&vec[0], &vec[2]}
@@ -50,10 +59,14 @@ TEST(SAMToReadPairs, constructor)
       , std::make_pair("2L:7529-9484W:FBtr0330654:4:1844:943:1127:S"
                      , "TCGACGGTATGGCAACGAATATATTGATGTCTTTCGTACCCATTGAAAACGTTGTGGTGCTTGCGCTTTAAAATC"
         )
+      , "FBtr0300689"
+      , std::make_pair<uint32_t, uint32_t>(980, 185)
     );
+    ans2.addPosTlen("FBtr0330654", std::make_pair<uint32_t, uint32_t>(944, 185));
+
     EXPECT_EQ(vector_readpairs.getReadPairs()[0], ans0);
     EXPECT_EQ(vector_readpairs.getReadPairs()[1], ans1);
     EXPECT_EQ(vector_readpairs.getReadPairs()[2], ans2);
-    // for(const auto& i : vector_readpairs.getReadPairs())
-    //     std::cerr << i << std::endl;
+    for(const auto& i : vector_readpairs.getReadPairs())
+        std::cerr << i << std::endl;
 }

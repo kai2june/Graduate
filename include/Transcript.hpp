@@ -103,6 +103,27 @@ class Transcript
             std::toupper(str[i], loc);
     }
 
+    void increaseUniqueCount(uint32_t cnt)
+    {
+        uniqueCount_.fetch_add(cnt, std::memory_order_seq_cst);
+    }
+
+    std::size_t getUniqueCount() const
+    {
+        return uniqueCount_.load();
+    }
+
+    void setAbundance(double abundance)
+    {
+        abundance_.store(abundance);
+    }
+
+
+friend std::ostream& operator<<(std::ostream& os, const Transcript& txp)
+{
+    os << txp.getName() << "\n" << txp.getSeq() << "\n" << txp.getLength() << std::endl;
+}
+
     bool operator<(const Transcript& rhs) const { return name_ < rhs.name_; }
     bool operator==(const Transcript& rhs) const { return name_ == rhs.name_; }       
 
@@ -110,15 +131,11 @@ class Transcript
     const std::string& getSeq() const { return seq_; }
     const uint32_t& getLength() const { return length_; }
     
-friend std::ostream& operator<<(std::ostream& os, const Transcript& txp)
-{
-    os << txp.getName() << "\n" << txp.getSeq() << "\n" << txp.getLength() << std::endl;
-}
-
   private:
     std::string name_;
     std::string seq_;
     uint32_t length_;
-    std::atomic<size_t> uniqueCount_;
-    std::atomic<size_t> totalCount_;
+    std::atomic<std::size_t> uniqueCount_;
+    std::atomic<std::size_t> totalCount_;
+    std::atomic<double> abundance_;
 };
