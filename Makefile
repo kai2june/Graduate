@@ -3,14 +3,14 @@ unit_test_path  = /mammoth/Graduate/unit_test
 build_path		= /mammoth/Graduate/build
 link_library	= -lgtest -lgtest_main -lpthread
 #Library	= -L/usr/local/lib/libgmock.a -L/usr/local/lib/libgmock_main.a -L/usr/local/lib/libgtest.a -L/usr/local/lib/libgtest_main.a
-CXXFLAGS 	= -std=c++17 -I$(include_path) -I/usr/local/include -L/usr/local/lib
+CXXFLAGS 	= -std=c++2a -I$(include_path) -I/usr/local/include -L/usr/local/lib
 
 .PHONY : all
-all	: Transcript SAMHeader SAM ReadPair SAMToReadPairs
+all	: Transcript SAMHeader SAM ReadPair FragmentLengthDistribution SAMToReadPairs
 
 .PHONY : debug
 debug : CXXFLAGS += -DDEBUG -g
-debug : SAMToReadPairs
+debug : $(TARGET)
 
 .PHONY : Transcript
 Transcript : $(unit_test_path)/Transcript_test.cpp
@@ -28,12 +28,16 @@ SAM : $(unit_test_path)/SAM_test.cpp
 ReadPair : $(unit_test_path)/ReadPair_test.cpp
 	$(CXX) $(CXXFLAGS) -o $@_test $< $(link_library)
 
+.PHONY : FragmentLengthDistribution
+FragmentLengthDistribution : $(unit_test_path)/FragmentLengthDistribution_test.cpp
+	$(CXX) $(CXXFLAGS) -o $@_test $< $(link_library)
+
 .PHONY : SAMToReadPairs
 SAMToReadPairs : $(unit_test_path)/SAMToReadPairs_test.cpp
 	$(CXX) $(CXXFLAGS) -o $@_test $< $(link_library)
 
-.PHONY : FragmentLengthDistribution
-FragmentLengthDistribution : $(unit_test_path)/FragmentLengthDistribution_test.cpp
+.PHONY : EMAlgorithm
+EMAlgorithm : $(unit_test_path)/EMAlgorithm_test.cpp
 	$(CXX) $(CXXFLAGS) -o $@_test $< $(link_library)
 
 .PHONY : clean

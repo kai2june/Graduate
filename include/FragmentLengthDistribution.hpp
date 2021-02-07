@@ -11,6 +11,16 @@ class FragmentLengthDistribution
         
     }
 
+    double getMean() const
+    {
+        return mean_;
+    }
+
+    double getSDV() const
+    {
+        return sdv_;
+    }
+
     double getPDF(double len) const
     { 
         return 1.0/(sdv_*std::sqrt(2.0*M_PI)) * std::exp( -1.0*(len-mean_)*(len-mean_) / (2.0*sdv_*sdv_) );

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <string>
 #include "SAMToReadPairs.hpp"
 #include "SAMHeader.hpp"
 #include "ReadPair.hpp"
@@ -69,4 +70,15 @@ TEST(SAMToReadPairs, constructor)
     EXPECT_EQ(vector_readpairs.getReadPairs()[2], ans2);
     for(const auto& i : vector_readpairs.getReadPairs())
         std::cerr << i << std::endl;
+}
+
+TEST(SAMToReadPairs, modify_constReturnFunction)
+{
+    std::vector<Transcript> vec;
+    vec.emplace_back("first_txp");
+    vec.emplace_back("second_txp");
+    
+    SAMToReadPairs rps(vec);
+    for(const Transcript& tr :rps.accessRefTxps())
+        std::cerr << tr;
 }

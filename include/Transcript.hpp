@@ -21,16 +21,17 @@ class Transcript
         name_ = std::move(txp.name_);
         seq_ = std::move(txp.seq_);
         length_ = std::move(txp.length_);
-        uniqueCount_.store(txp.uniqueCount_);
-        totalCount_.store(txp.totalCount_);
+        unique_count_.store(txp.unique_count_);
+        total_count_.store(txp.total_count_);
     }
     Transcript& operator=(Transcript&& txp)
     {
         name_ = std::move(txp.name_);
         seq_ = std::move(txp.seq_);
         length_ = std::move(txp.length_);
-        uniqueCount_.store(txp.uniqueCount_);
-        totalCount_.store(txp.totalCount_);
+        unique_count_.store(txp.unique_count_);
+        total_count_.store(txp.total_count_);
+	    return *this;
     }
     Transcript(const Transcript& txp) = delete;
     Transcript& operator=(const Transcript& txp) = delete;
@@ -105,12 +106,32 @@ class Transcript
 
     void increaseUniqueCount(uint32_t cnt)
     {
-        uniqueCount_.fetch_add(cnt, std::memory_order_seq_cst);
+        unique_count_.fetch_add(cnt, std::memory_order_seq_cst);
     }
 
     std::size_t getUniqueCount() const
     {
-        return uniqueCount_.load();
+        return unique_count_.load();
+    }
+
+    void increaseTotalCount(double cnt)
+    {
+        total_count_.fetch_add(cnt, std::memory_order_seq_cst);
+    }
+
+    double getTotalCount() const
+    {
+        return total_count_.load();
+    }
+
+    void setTotalCount(double cnt)
+    {
+        total_count_.store(cnt);
+    }
+
+    double getAbundance() const
+    {
+        return abundance_.load();
     }
 
     void setAbundance(double abundance)
@@ -118,10 +139,20 @@ class Transcript
         abundance_.store(abundance);
     }
 
+    double getEffectiveLength() const
+    {
+        return effective_length_;
+    }
+
+    void setEffectiveLength(double effective_length)
+    {
+        effective_length_ = effective_length;
+    }
 
 friend std::ostream& operator<<(std::ostream& os, const Transcript& txp)
 {
     os << txp.getName() << "\n" << txp.getSeq() << "\n" << txp.getLength() << std::endl;
+    return os;
 }
 
     bool operator<(const Transcript& rhs) const { return name_ < rhs.name_; }
@@ -132,10 +163,11 @@ friend std::ostream& operator<<(std::ostream& os, const Transcript& txp)
     const uint32_t& getLength() const { return length_; }
     
   private:
-    std::string name_;
-    std::string seq_;
-    uint32_t length_;
-    std::atomic<std::size_t> uniqueCount_;
-    std::atomic<std::size_t> totalCount_;
+    std::string name_{""};
+    std::string seq_{""};
+    uint32_t length_{0};
+    double effective_length_{0.0};
+    std::atomic<std::size_t> unique_count_;
+    std::atomic<double> total_count_;
     std::atomic<double> abundance_;
 };
