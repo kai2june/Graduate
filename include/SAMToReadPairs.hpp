@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <algorithm>
+#include <type_traits>
 #include "SAMHeader.hpp"
 #include "SAM.hpp"
 #include "Transcript.hpp"
@@ -10,10 +11,26 @@
 class SAMToReadPairs
 {
   public:
+    SAMToReadPairs(std::vector<SAM>& vec_sam, std::vector<Transcript>& txps)
+        : ref_txps_(txps)
+    {
+        if( vec_sam[0].get_header().template get_member<HEADER_INDEX::ALIGNMENT_SORT_ORDER>() != SORT_TYPE::QUERYNAME)
+            throw std::runtime_error("SAM vector should be sorted by QUERYNAME!!!!");
+        sortTranscripts(txps); // quickly locate transcript name
+
+        std::cerr << "Parsing .sam vector..." << std::endl;
+        std::string prev_read_name;
+        for(SAM& sam : vec_sam)
+            setReadPairs(sam, txps, prev_read_name);
+        setFLD();
+        std::cerr << "mean" << FLD_.getMean() << " sdv:" << FLD_.getSDV() << std::endl;
+    }
+
     SAMToReadPairs(Header& sam_header, std::ifstream& ifs, std::vector<Transcript>& txps)
         : ref_txps_(txps)
     {
-        std::cerr << "Remember the sam file should be sorted by read name!!!!!!" << std::endl;
+        if( sam_header.template get_member<HEADER_INDEX::ALIGNMENT_SORT_ORDER>() != SORT_TYPE::QUERYNAME)
+            throw std::runtime_error("SAM vector should be sorted by QUERYNAME!!!!");
         sortTranscripts(txps); // quickly locate transcript name
 
         std::cerr << "Reading .sam file..." << std::endl;
