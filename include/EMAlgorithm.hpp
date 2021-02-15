@@ -2,6 +2,8 @@
 #include <vector>
 #include <unordered_map>
 #include <numeric>
+#include <fstream>
+#include <iomanip>
 #include "Transcript.hpp"
 #include "ReadPair.hpp"
 #include "SAMToReadPairs.hpp"
@@ -34,11 +36,29 @@ class EMAlgorithm
 
     void run(std::vector<Transcript>& txps, SAMToReadPairs& rps)
     {
+        std::size_t cnt{0};
         do
         {
+            std::cerr << "round" << cnt++ << std::endl;
             Estep(rps);
             Mstep(rps);
+            if( sum_.size() >= 3 and
+                sum_[sum_.size()-1] == sum_[sum_.size()-2] and 
+                sum_[sum_.size()-2] == sum_[sum_.size()-3]
+            )
+                convergence_ = true;
         } while(!convergence_);
+
+        std::string filename("/mammoth/Graduate/unit_test/data/transcript_abundance.txt");
+        std::ofstream ofs(filename, std::ios::app);
+        for(const auto& txp : txps)
+        {
+            ofs.write(txp.getName().c_str(), txp.getName().size());
+            ofs.write(" ", 1);
+
+            ofs.write(std::to_string(txp.getAbundance()).c_str(), std::to_string(txp.getAbundance()).size());
+            ofs.write("\n", 1);
+        }
     }
 
     void Estep(SAMToReadPairs& rps)
@@ -59,7 +79,11 @@ class EMAlgorithm
             double sum = std::accumulate(prob.begin(), prob.end(), 0.0);
             std::size_t i(0);
             for(Transcript* tr : txps)
-                tr->increaseTotalCount(prob[i++] / sum);
+            {
+                double inc = sum > 0.0 ? prob[i]/sum : 1/prob.size();
+                ++i;
+                tr->increaseTotalCount(inc);
+            }
         }
     }
 
@@ -68,15 +92,21 @@ class EMAlgorithm
         std::cerr << "I'm in Mstep." << std::endl;
         double sum = 0.0;
         for(Transcript& tr : rps.accessRefTxps())
-            sum += tr.getTotalCount() / tr.getEffectiveLength();
+        {
+            sum = sum + tr.getTotalCount() / tr.getEffectiveLength();
+        }
+        uint64_t s = sum*10000.0;
+        sum_.emplace_back(static_cast<double>(s/10000.0));
+        std::cerr << "sum: " << sum_.back() << std::endl;
 
         double threshold{1.0 / static_cast<double>(rps.accessRefTxps().size()) };
         for(Transcript& tr : rps.accessRefTxps())
         {
             double cur_abundance = tr.getTotalCount() / tr.getEffectiveLength() / sum;
-            if(cur_abundance - tr.getAbundance() > threshold)
-                convergence_ = false;
-            double prev = tr.getAbundance();
+            double prev_abundance = tr.getAbundance();
+            // if(cur_abundance - prev_abundance > threshold)
+            //     convergence_ = false;
+            
             tr.setAbundance(tr.getTotalCount() / tr.getEffectiveLength() / sum);
         }
     }
@@ -85,7 +115,10 @@ class EMAlgorithm
     {
         double sum = 0.0;
         for(std::size_t i(1); i<=tr.getLength(); ++i)
+        {
             sum += FLD.getPDF(i) * (tr.getLength() - i + 1);
+            // std::cerr << "sum= " << sum << std::endl;
+        }
         return sum;
     }
 
@@ -96,5 +129,6 @@ class EMAlgorithm
     }
 
   private:
-    bool convergence_{true};
+    std::vector<double> sum_;
+    bool convergence_{false};
 };

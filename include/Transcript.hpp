@@ -170,4 +170,12 @@ friend std::ostream& operator<<(std::ostream& os, const Transcript& txp)
     std::atomic<std::size_t> unique_count_;
     std::atomic<double> total_count_;
     std::atomic<double> abundance_;
+
+#ifdef DEBUG
+  public:
+    void setName(std::string str)
+    {
+        name_ = str;
+    }
+#endif
 };

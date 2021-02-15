@@ -20,8 +20,13 @@ class SAMToReadPairs
 
         std::cerr << "Parsing .sam vector..." << std::endl;
         std::string prev_read_name;
+        std::size_t i{0};
         for(SAM& sam : vec_sam)
+        {
+            if(i++ % 100000 == 0)
+                std::cerr << i << "th record to readpair" << std::endl;
             setReadPairs(sam, txps, prev_read_name);
+        }
         setFLD();
         std::cerr << "mean" << FLD_.getMean() << " sdv:" << FLD_.getSDV() << std::endl;
     }
@@ -35,8 +40,11 @@ class SAMToReadPairs
 
         std::cerr << "Reading .sam file..." << std::endl;
         std::string prev_read_name;
+        std::size_t i{0};
         while(!ifs.eof())
         {
+            if(i++ % 10000 == 0)
+                std::cerr << i << "th record" << std::endl;
             SAM sam(sam_header);
             SAM::get_obj(ifs, sam);
             setReadPairs(sam, txps, prev_read_name);
@@ -48,6 +56,12 @@ class SAMToReadPairs
 
     void setReadPairs(SAM& sam, std::vector<Transcript>& txps, std::string& prev_read_name)
     {
+        int32_t tlen = std::abs(sam.template get_member<MEMBER_INDEX::TLEN>());
+        if(tlen == 0)
+        {
+            // std::cerr << "tlen==0, unaligned reads found." << std::endl;
+            return;
+        }
         std::string cur_read_name(sam.template get_member<MEMBER_INDEX::QNAME>());
         if(cur_read_name == prev_read_name) // same read
         {
@@ -71,7 +85,6 @@ class SAMToReadPairs
         }
         else // different read pair 
         {
-            int32_t tlen = std::abs(sam.template get_member<MEMBER_INDEX::TLEN>());
             read_pairs_.emplace_back(
                 txps
                 , std::make_pair(cur_read_name, sam.template get_member<MEMBER_INDEX::SEQ>())
@@ -88,6 +101,7 @@ class SAMToReadPairs
 
     void setFLD()
     {
+        /// @brief tlen equals 0 should be handled
         unsigned long long int total_squared_length{0uLL}, total_length{0uLL}, total_num{0uLL};
         for(ReadPair rp : read_pairs_)
         {
@@ -99,8 +113,8 @@ class SAMToReadPairs
             }
         }
         double mean=0.0, sdv=0.0;
-        mean = total_length / total_num; 
-        sdv = total_squared_length / total_num - mean*mean;
+        mean = total_length / total_num;
+        sdv = std::sqrt(total_squared_length / total_num - mean*mean);
         FLD_ = FragmentLengthDistribution{mean, sdv};
     }
 
